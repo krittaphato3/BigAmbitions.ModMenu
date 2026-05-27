@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>ItzRealOzoneBATrainer</AssemblyName>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+  <PropertyGroup>
+    <LangVersion>11.0</LangVersion>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+  </PropertyGroup>
+  <PropertyGroup />
+  <ItemGroup />
+  <ItemGroup>
+    <Reference Include="MelonLoader" />
+    <Reference Include="UnityEngine.IMGUIModule" />
+    <Reference Include="UnityEngine.CoreModule" />
+    <Reference Include="Il2CppBigAmbitions" />
+    <Reference Include="Il2CppInterop.Runtime" />
+    <Reference Include="UnityEngine.UI" />
+    <Reference Include="Il2Cppmscorlib" />
+    <Reference Include="Unity.TextMeshPro" />
+    <Reference Include="Il2CppBigAmbitions.Items" />
+    <Reference Include="Il2CppBigAmbitions.Neighborhoods" />
+    <Reference Include="UnityEngine.TextRenderingModule" />
+    <Reference Include="Il2CppHGPlugins" />
+    <Reference Include="Il2CppBigAmbitions.Characters" />
+    <Reference Include="Il2CppHGExtensions" />
+  </ItemGroup>
+</Project>
