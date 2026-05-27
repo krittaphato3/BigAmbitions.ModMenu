@@ -27,8 +27,11 @@ public static class EmployeeModule
 
 	public static bool StatusIsSuccess { get; private set; }
 
+	public static int CandidateSkillLevel { get; set; } = 100;
+
 	public static void Initialize()
 	{
+		CandidateSkillLevel = 100;
 		MelonLogger.Msg("[EmployeeModule] Initialized.");
 	}
 

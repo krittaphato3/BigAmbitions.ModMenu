@@ -4,6 +4,7 @@ using Il2Cpp;
 using Il2CppHelpers;
 using MelonLoader;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace BigAmbitionsTrainer.Modules;
 

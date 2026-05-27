@@ -47,7 +47,7 @@ public static class BusinessModule
 
 	public static bool StatusIsSuccess { get; private set; }
 
-	public static List<PlayerBusinessInfo> PlayerBusinesses { get; private set; } = new List<PlayerBusinessInfo>();
+	public static System.Collections.Generic.List<PlayerBusinessInfo> PlayerBusinesses { get; private set; } = new System.Collections.Generic.List<PlayerBusinessInfo>();
 
 	public static string SearchFilter { get; set; } = "";
 
@@ -281,7 +281,7 @@ public static class BusinessModule
 				SetStatus("No save loaded.", success: false);
 				return;
 			}
-			List<BuildingRegistration> buildingRegistrations = current.BuildingRegistrations;
+			var buildingRegistrations = current.BuildingRegistrations;
 			if (buildingRegistrations == null)
 			{
 				SetStatus("No building data.", success: false);
@@ -329,7 +329,7 @@ public static class BusinessModule
 			{
 				return;
 			}
-			List<BuildingRegistration> buildingRegistrations = current.BuildingRegistrations;
+			var buildingRegistrations = current.BuildingRegistrations;
 			if (buildingRegistrations == null)
 			{
 				return;

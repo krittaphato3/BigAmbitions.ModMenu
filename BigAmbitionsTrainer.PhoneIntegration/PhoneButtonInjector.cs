@@ -11,6 +11,7 @@ using MelonLoader;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 namespace BigAmbitionsTrainer.PhoneIntegration;
 
@@ -25,6 +26,10 @@ public static class PhoneButtonInjector
 	private static int _retryCount;
 
 	private static bool _explorationDone;
+
+	private static int _startDelay;
+
+	private const int StartDelayFrames = 180;
 
 	private const int SearchInterval = 90;
 
@@ -42,6 +47,8 @@ public static class PhoneButtonInjector
 		}
 	}
 
+	private static bool _lastPhoneIntegration = true;
+
 	public static void Initialize()
 	{
 		_fullMenuButton = null;
@@ -49,13 +56,35 @@ public static class PhoneButtonInjector
 		_searchCooldown = 0;
 		_retryCount = 0;
 		_explorationDone = false;
+		_startDelay = StartDelayFrames;
+		_lastPhoneIntegration = TrainerConfig.PhoneIntegration;
 		MelonLogger.Msg("[PhoneIntegration] Initialized.");
 	}
 
 	public static void OnUpdate()
 	{
-		if (!TrainerConfig.PhoneIntegration)
+		bool phoneIntegration = TrainerConfig.PhoneIntegration;
+		if (phoneIntegration != _lastPhoneIntegration)
 		{
+			_lastPhoneIntegration = phoneIntegration;
+			if (phoneIntegration)
+			{
+				MelonLogger.Msg("[PhoneIntegration] Phone integration enabled, starting injection.");
+				ResetState();
+			}
+			else
+			{
+				MelonLogger.Msg("[PhoneIntegration] Phone integration disabled, removing.");
+				Remove();
+			}
+		}
+		if (!phoneIntegration)
+		{
+			return;
+		}
+		if (_startDelay > 0)
+		{
+			_startDelay--;
 			return;
 		}
 		if (_fullMenuInjected)
@@ -108,9 +137,9 @@ public static class PhoneButtonInjector
 			{
 				TryInjectFullMenu();
 			}
-			if (_retryCount % 10 == 0)
+			if (_retryCount >= 50 && !_fullMenuInjected)
 			{
-				MelonLogger.Msg($"[PhoneIntegration] Attempt {_retryCount}/{50} injected={_fullMenuInjected}");
+				MelonLogger.Warning("[PhoneIntegration] Max retries reached - phone injection failed. The phone UI may not be available yet.");
 			}
 		}
 		catch (Exception ex)
@@ -176,7 +205,6 @@ public static class PhoneButtonInjector
 				HookButtonClick(val6);
 				_fullMenuButton = val6;
 				_fullMenuInjected = true;
-				AdjustButtonSizes(val2);
 				EnsureTrainerPanel(val);
 				MelonLogger.Msg("[PhoneIntegration] FullMenu button injected successfully.");
 				ToastNotification.Show("ItzRealOzone Trainer added to phone!");
@@ -243,7 +271,7 @@ public static class PhoneButtonInjector
 			if ((Object)(object)val != (Object)null)
 			{
 				((UnityEventBase)val.onClick).RemoveAllListeners();
-				((UnityEvent)val.onClick).AddListener(UnityAction.op_Implicit((Action)OnTrainerClicked));
+				((UnityEvent)val.onClick).AddListener((UnityAction)OnTrainerClicked);
 				MelonLogger.Msg("[PhoneIntegration] Button click hooked.");
 			}
 		}
@@ -284,10 +312,10 @@ public static class PhoneButtonInjector
 			}
 			try
 			{
-				Dictionary<AppName, FullMenuAppButton> appButtons = val._appButtons;
+				var appButtons = val._appButtons;
 				if (appButtons != null)
 				{
-					Enumerator<AppName, FullMenuAppButton> enumerator = appButtons.GetEnumerator();
+					var enumerator = appButtons.GetEnumerator();
 					while (enumerator.MoveNext())
 					{
 						KeyValuePair<AppName, FullMenuAppButton> current = enumerator.Current;
@@ -329,6 +357,11 @@ public static class PhoneButtonInjector
 		{
 			MelonLogger.Warning("[PhoneIntegration] ShowTrainerPanel error: " + ex.Message);
 		}
+	}
+
+	public static void OpenTrainer()
+	{
+		ShowTrainerPanel();
 	}
 
 	public static void Remove()
@@ -433,132 +466,6 @@ public static class PhoneButtonInjector
 		}
 		catch
 		{
-		}
-	}
-
-	private static void AdjustButtonSizes(Transform container)
-	{
-		//IL_0047: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0079: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0092: Unknown result type (might be due to invalid IL or missing references)
-		//IL_010c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0111: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02c3: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02c8: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02ca: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02f1: Unknown result type (might be due to invalid IL or missing references)
-		//IL_02f6: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0313: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0332: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01df: Unknown result type (might be due to invalid IL or missing references)
-		//IL_01f5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_020b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_021b: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0225: Unknown result type (might be due to invalid IL or missing references)
-		//IL_023c: Unknown result type (might be due to invalid IL or missing references)
-		try
-		{
-			RectTransform component = ((Component)container).GetComponent<RectTransform>();
-			if ((Object)(object)component == (Object)null)
-			{
-				return;
-			}
-			MelonLogger.Msg($"[PhoneIntegration] Container '{((Object)container).name}' anchoredPos={component.anchoredPosition} sizeDelta={component.sizeDelta} anchorMin={component.anchorMin} anchorMax={component.anchorMax}");
-			HorizontalLayoutGroup component2 = ((Component)container).GetComponent<HorizontalLayoutGroup>();
-			if ((Object)(object)component2 != (Object)null)
-			{
-				MelonLogger.Msg("[PhoneIntegration] Found HorizontalLayoutGroup, disabling it.");
-				((Behaviour)component2).enabled = false;
-			}
-			GridLayoutGroup component3 = ((Component)container).GetComponent<GridLayoutGroup>();
-			if ((Object)(object)component3 != (Object)null)
-			{
-				MelonLogger.Msg("[PhoneIntegration] Found GridLayoutGroup, disabling it.");
-				((Behaviour)component3).enabled = false;
-			}
-			ContentSizeFitter component4 = ((Component)container).GetComponent<ContentSizeFitter>();
-			if ((Object)(object)component4 != (Object)null)
-			{
-				MelonLogger.Msg("[PhoneIntegration] Found ContentSizeFitter, disabling it.");
-				((Behaviour)component4).enabled = false;
-			}
-			Rect rect = component.rect;
-			float num = rect.width;
-			if (num <= 0f)
-			{
-				num = 1400f;
-			}
-			int num2 = 0;
-			for (int i = 0; i < container.childCount; i++)
-			{
-				Transform child = container.GetChild(i);
-				if ((Object)(object)child != (Object)null && ((Component)child).gameObject.activeSelf)
-				{
-					num2++;
-				}
-			}
-			if (num2 == 0)
-			{
-				return;
-			}
-			float num3 = num / (float)num2;
-			if (num3 > 220f)
-			{
-				num3 = 220f;
-			}
-			int num4 = 0;
-			for (int j = 0; j < container.childCount; j++)
-			{
-				Transform child2 = container.GetChild(j);
-				if ((Object)(object)child2 == (Object)null || !((Component)child2).gameObject.activeSelf)
-				{
-					continue;
-				}
-				RectTransform component5 = ((Component)child2).GetComponent<RectTransform>();
-				if ((Object)(object)component5 != (Object)null)
-				{
-					component5.anchorMin = new Vector2(0f, 1f);
-					component5.anchorMax = new Vector2(0f, 1f);
-					component5.pivot = new Vector2(0f, 1f);
-					component5.sizeDelta = new Vector2(num3, component5.sizeDelta.y);
-					component5.anchoredPosition = new Vector2((float)num4 * num3, 0f);
-				}
-				try
-				{
-					Il2CppArrayBase<TMP_Text> componentsInChildren = ((Component)child2).GetComponentsInChildren<TMP_Text>(true);
-					if (componentsInChildren != null)
-					{
-						foreach (TMP_Text item in componentsInChildren)
-						{
-							if ((Object)(object)item != (Object)null && item.fontSize > 20f)
-							{
-								item.fontSize = 20f;
-							}
-						}
-					}
-				}
-				catch
-				{
-				}
-				num4++;
-			}
-			Vector2 anchoredPosition = component.anchoredPosition;
-			float y = anchoredPosition.y - 30f;
-			if ((Object)(object)container.Find("__bizmod_shifted") == (Object)null)
-			{
-				GameObject val = new GameObject("__bizmod_shifted");
-				val.transform.SetParent(container, false);
-				val.SetActive(false);
-				anchoredPosition.y = y;
-				component.anchoredPosition = anchoredPosition;
-				MelonLogger.Msg($"[PhoneIntegration] Shifted container down to y={anchoredPosition.y}");
-			}
-			MelonLogger.Msg($"[PhoneIntegration] Adjusted {num2} buttons to width {num3:F0}px (container={num:F0}px)");
-		}
-		catch (Exception ex)
-		{
-			MelonLogger.Warning("[PhoneIntegration] AdjustButtonSizes: " + ex.Message);
 		}
 	}
 

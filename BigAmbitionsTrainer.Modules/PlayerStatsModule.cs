@@ -2,9 +2,11 @@ using System;
 using BigAmbitionsTrainer.Config;
 using BigAmbitionsTrainer.UI.Components;
 using Il2Cpp;
+using Il2CppBigAmbitions.Characters;
 using Il2CppUI.Smartphone.Apps.Persona;
 using MelonLoader;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace BigAmbitionsTrainer.Modules;
 
@@ -15,6 +17,10 @@ public static class PlayerStatsModule
 	private static int _playerSearchCooldown;
 
 	private static int _hungerRefillCounter;
+
+	private static int _readCooldown;
+
+	private const int ReadInterval = 30;
 
 	public static float CurrentEnergy { get; private set; }
 
@@ -34,21 +40,12 @@ public static class PlayerStatsModule
 
 	public static void Initialize()
 	{
+		_readCooldown = 10;
 		MelonLogger.Msg("[PlayerStatsModule] Initialized.");
 	}
 
 	public static void OnUpdate()
 	{
-		//IL_0124: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0129: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_012c: Invalid comparison between Unknown and I4
-		//IL_0136: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0138: Invalid comparison between Unknown and I4
-		//IL_0142: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0144: Invalid comparison between Unknown and I4
-		//IL_014e: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0150: Invalid comparison between Unknown and I4
 		try
 		{
 			GameInstance current = SaveGameManager.Current;
@@ -56,15 +53,10 @@ public static class PlayerStatsModule
 			{
 				return;
 			}
-			CurrentEnergy = current.Energy;
-			CurrentHappiness = current.Happiness;
-			CurrentHunger = current.Hunger;
 			GameVariables gameVariables = current.gameVariables;
+
 			if (gameVariables != null)
 			{
-				IsEnergyDisabled = gameVariables.disableEnergy;
-				IsHappinessDisabled = gameVariables.disableHappiness;
-				IsAgingDisabled = gameVariables.disableAging;
 				if (TrainerConfig.DisableEnergy && !gameVariables.disableEnergy)
 				{
 					gameVariables.disableEnergy = true;
@@ -78,8 +70,7 @@ public static class PlayerStatsModule
 					gameVariables.disableAging = true;
 				}
 			}
-			IsHungerDisabled = TrainerConfig.DisableHunger;
-			if (IsHungerDisabled)
+			if (TrainerConfig.DisableHunger)
 			{
 				_hungerRefillCounter++;
 				if (_hungerRefillCounter >= 60)
@@ -94,6 +85,24 @@ public static class PlayerStatsModule
 					}
 				}
 			}
+
+			_readCooldown--;
+			if (_readCooldown > 0)
+			{
+				return;
+			}
+			_readCooldown = ReadInterval;
+
+			CurrentEnergy = current.Energy;
+			CurrentHappiness = current.Happiness;
+			CurrentHunger = current.Hunger;
+			IsHungerDisabled = TrainerConfig.DisableHunger;
+			if (gameVariables != null)
+			{
+				IsEnergyDisabled = gameVariables.disableEnergy;
+				IsHappinessDisabled = gameVariables.disableHappiness;
+				IsAgingDisabled = gameVariables.disableAging;
+			}
 			try
 			{
 				if ((Object)(object)_cachedPlayer == (Object)null && _playerSearchCooldown <= 0)
@@ -107,7 +116,7 @@ public static class PlayerStatsModule
 				}
 				if ((Object)(object)_cachedPlayer != (Object)null)
 				{
-					WalkingSpeed walkingSpeed = _cachedPlayer.walkingSpeed;
+					var walkingSpeed = _cachedPlayer.walkingSpeed;
 					if ((int)walkingSpeed == 1)
 					{
 						PlayerSpeedIndex = 0;
@@ -255,7 +264,7 @@ public static class PlayerStatsModule
 			ThirdPersonCharacter cachedPlayer = _cachedPlayer;
 			if ((Object)(object)cachedPlayer != (Object)null)
 			{
-				cachedPlayer.walkingSpeed = (WalkingSpeed)(speedIndex switch
+				cachedPlayer.walkingSpeed = (ThirdPersonCharacter.WalkingSpeed)(speedIndex switch
 				{
 					1 => 2, 
 					2 => 3, 

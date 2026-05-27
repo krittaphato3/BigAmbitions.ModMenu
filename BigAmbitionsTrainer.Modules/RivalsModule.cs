@@ -32,7 +32,7 @@ public static class RivalsModule
 
 	public static bool StatusIsSuccess { get; private set; }
 
-	public static List<RivalInfo> Rivals { get; private set; } = new List<RivalInfo>();
+	public static System.Collections.Generic.List<RivalInfo> Rivals { get; private set; } = new System.Collections.Generic.List<RivalInfo>();
 
 	public static int SelectedRivalIndex { get; set; }
 
@@ -52,10 +52,10 @@ public static class RivalsModule
 		try
 		{
 			Rivals.Clear();
-			Dictionary<string, RivalData> rivalDataCache = RivalsHelper.RivalDataCache;
+			var rivalDataCache = RivalsHelper.RivalDataCache;
 			if (rivalDataCache != null)
 			{
-				Enumerator<string, RivalData> enumerator = rivalDataCache.GetEnumerator();
+				var enumerator = rivalDataCache.GetEnumerator();
 				while (enumerator.MoveNext())
 				{
 					RivalData value = enumerator.Current.Value;

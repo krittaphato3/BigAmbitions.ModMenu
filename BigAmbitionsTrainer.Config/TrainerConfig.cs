@@ -37,6 +37,29 @@ public static class TrainerConfig
 
 	private static MelonPreferences_Entry<bool> _phoneIntegration;
 
+	private static MelonPreferences_Entry<float> _toastDuration;
+
+	private static MelonPreferences_Entry<float> _toastFadeStart;
+
+	private static MelonPreferences_Entry<int> _candidateLevel;
+
+	public static float ToastDuration => _toastDuration.Value;
+
+	public static float ToastFadeStart => _toastFadeStart.Value;
+
+	public static int CandidateLevel
+	{
+		get
+		{
+			return _candidateLevel.Value;
+		}
+		set
+		{
+			_candidateLevel.Value = value;
+			Save();
+		}
+	}
+
 	public static bool DisableEnergy
 	{
 		get
@@ -250,11 +273,19 @@ public static class TrainerConfig
 		_disableHunger = _category.CreateEntry<bool>("DisableHunger", false, "Disable Hunger Decay", (string)null, false, false, (ValueValidator)null, (string)null);
 		_gameSpeed = _category.CreateEntry<float>("GameSpeed", 1f, "Game Speed Multiplier", (string)null, false, false, (ValueValidator)null, (string)null);
 		_phoneIntegration = _category.CreateEntry<bool>("PhoneIntegration", true, "Phone Menu Integration", (string)null, false, false, (ValueValidator)null, (string)null);
+		_toastDuration = _category.CreateEntry<float>("ToastDuration", 3f, "Toast Duration (seconds)", (string)null, false, false, (ValueValidator)null, (string)null);
+		_toastFadeStart = _category.CreateEntry<float>("ToastFadeStart", 2f, "Toast Fade Start (seconds)", (string)null, false, false, (ValueValidator)null, (string)null);
+		_candidateLevel = _category.CreateEntry<int>("CandidateLevel", 100, "Employee Candidate Skill Level", (string)null, false, false, (ValueValidator)null, (string)null);
 		MelonLogger.Msg("[Config] Preferences loaded.");
 	}
 
 	public static void Save()
 	{
 		_category.SaveToFile(false);
+	}
+
+	public static void Load()
+	{
+		_category.LoadFromFile();
 	}
 }

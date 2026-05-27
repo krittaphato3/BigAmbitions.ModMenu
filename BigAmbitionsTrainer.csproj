@@ -9,22 +9,31 @@
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
   </PropertyGroup>
-  <PropertyGroup />
+  <PropertyGroup>
+    <AssemblySearchPaths>{HintPathFromItem};{TargetFrameworkDirectory};{RawFileName}</AssemblySearchPaths>
+  </PropertyGroup>
   <ItemGroup />
   <ItemGroup>
-    <Reference Include="MelonLoader" />
-    <Reference Include="UnityEngine.IMGUIModule" />
-    <Reference Include="UnityEngine.CoreModule" />
-    <Reference Include="Il2CppBigAmbitions" />
-    <Reference Include="Il2CppInterop.Runtime" />
-    <Reference Include="UnityEngine.UI" />
-    <Reference Include="Il2Cppmscorlib" />
-    <Reference Include="Unity.TextMeshPro" />
-    <Reference Include="Il2CppBigAmbitions.Items" />
-    <Reference Include="Il2CppBigAmbitions.Neighborhoods" />
-    <Reference Include="UnityEngine.TextRenderingModule" />
-    <Reference Include="Il2CppHGPlugins" />
-    <Reference Include="Il2CppBigAmbitions.Characters" />
-    <Reference Include="Il2CppHGExtensions" />
+    <Reference Include="MelonLoader" HintPath="MelonLoader\net6\MelonLoader.dll" />
+    <Reference Include="UnityEngine.IMGUIModule" HintPath="MelonLoader\Il2CppAssemblies\UnityEngine.IMGUIModule.dll" />
+    <Reference Include="UnityEngine.InputModule" HintPath="MelonLoader\Il2CppAssemblies\UnityEngine.InputModule.dll" />
+    <Reference Include="UnityEngine.CoreModule" HintPath="MelonLoader\Il2CppAssemblies\UnityEngine.CoreModule.dll" />
+    <Reference Include="Il2CppBigAmbitions" HintPath="MelonLoader\Il2CppAssemblies\Il2CppBigAmbitions.dll" />
+    <Reference Include="Il2CppInterop.Runtime" HintPath="MelonLoader\net6\Il2CppInterop.Runtime.dll" />
+    <Reference Include="UnityEngine.UI" HintPath="MelonLoader\Il2CppAssemblies\UnityEngine.UI.dll" />
+    <Reference Include="Il2Cppmscorlib" HintPath="MelonLoader\Il2CppAssemblies\Il2Cppmscorlib.dll" />
+    <Reference Include="Unity.TextMeshPro" HintPath="MelonLoader\Il2CppAssemblies\Unity.TextMeshPro.dll" />
+    <Reference Include="Il2CppBigAmbitions.Items" HintPath="MelonLoader\Il2CppAssemblies\Il2CppBigAmbitions.Items.dll" />
+    <Reference Include="Il2CppBigAmbitions.Neighborhoods" HintPath="MelonLoader\Il2CppAssemblies\Il2CppBigAmbitions.Neighborhoods.dll" />
+    <Reference Include="UnityEngine.TextRenderingModule" HintPath="MelonLoader\Il2CppAssemblies\UnityEngine.TextRenderingModule.dll" />
+    <Reference Include="Il2CppHGPlugins" HintPath="MelonLoader\Il2CppAssemblies\Il2CppHGPlugins.dll" />
+    <Reference Include="Il2CppBigAmbitions.Characters" HintPath="MelonLoader\Il2CppAssemblies\Il2CppBigAmbitions.Characters.dll" />
+    <Reference Include="Il2CppHGExtensions" HintPath="MelonLoader\Il2CppAssemblies\Il2CppHGExtensions.dll" />
+    <Reference Include="Il2CppSystem" HintPath="MelonLoader\Il2CppAssemblies\Il2CppSystem.dll" />
+    <Reference Include="Il2CppSystem.Core" HintPath="MelonLoader\Il2CppAssemblies\Il2CppSystem.Core.dll" />
+    <Reference Include="Il2CppInterop.Common" HintPath="MelonLoader\net6\Il2CppInterop.Common.dll" />
+    <Reference Include="UnityEngine.UIModule" HintPath="MelonLoader\Il2CppAssemblies\UnityEngine.UIModule.dll" />
+    <Reference Include="UnityEngine.TextCoreFontEngineModule" HintPath="MelonLoader\Il2CppAssemblies\UnityEngine.TextCoreFontEngineModule.dll" />
+    <Reference Include="Il2Cpp__Generated" HintPath="MelonLoader\Il2CppAssemblies\Il2Cpp__Generated.dll" />
   </ItemGroup>
 </Project>

@@ -9,6 +9,10 @@ namespace BigAmbitionsTrainer.Core;
 
 public class TrainerMain : MelonMod
 {
+	private static int _updateCooldown;
+
+	private const int UpdateInterval = 30;
+
 	public override void OnInitializeMelon()
 	{
 		MelonLogger.Msg("===========================================");
@@ -25,13 +29,40 @@ public class TrainerMain : MelonMod
 		WorldModule.Initialize();
 		RivalsModule.Initialize();
 		PhoneButtonInjector.Initialize();
+		_updateCooldown = 5;
 		MelonLogger.Msg("[Trainer] All modules initialized successfully.");
+	}
+
+	[System.Runtime.InteropServices.DllImport("user32.dll")]
+	private static extern short GetAsyncKeyState(int vKey);
+
+	private const int VK_F8 = 0x77;
+
+	private static bool _f8PrevDown;
+
+	private static bool IsF8Pressed()
+	{
+		bool flag = (GetAsyncKeyState(VK_F8) & 0x8000) != 0;
+		bool result = flag && !_f8PrevDown;
+		_f8PrevDown = flag;
+		return result;
 	}
 
 	public override void OnUpdate()
 	{
 		try
 		{
+			if (IsF8Pressed())
+			{
+				TrainerOverlay.Toggle();
+			}
+			PhoneButtonInjector.OnUpdate();
+			_updateCooldown--;
+			if (_updateCooldown > 0)
+			{
+				return;
+			}
+			_updateCooldown = UpdateInterval;
 			PlayerStatsModule.OnUpdate();
 			VehicleModule.OnUpdate();
 			BusinessModule.OnUpdate();
@@ -40,7 +71,6 @@ public class TrainerMain : MelonMod
 			WorldModule.OnUpdate();
 			MoneyModule.OnUpdate();
 			RivalsModule.OnUpdate();
-			PhoneButtonInjector.OnUpdate();
 		}
 		catch (Exception value)
 		{
@@ -50,6 +80,14 @@ public class TrainerMain : MelonMod
 
 	public override void OnGUI()
 	{
+		TrainerOverlay.OnGUI();
 		ToastNotification.DrawToasts();
+		ConfirmationDialog.OnGUI();
+		TooltipManager.OnGUI();
+	}
+
+	public override void OnApplicationQuit()
+	{
+		TrainerOverlay.Cleanup();
 	}
 }

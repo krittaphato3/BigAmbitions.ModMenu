@@ -8,7 +8,9 @@ using Il2CppTMPro;
 using MelonLoader;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 namespace BigAmbitionsTrainer.PhoneIntegration;
 
@@ -40,7 +42,17 @@ public static class TrainerPanel
 
 	private static TMP_FontAsset _gameFont;
 
+	private static bool _assetsCached;
+
 	private static RectTransform _indicatorRect;
+
+	private static readonly System.Collections.Generic.List<(string name, GameObject card, GameObject header, bool collapsed, float originalHeight)> _cardStates = new System.Collections.Generic.List<(string, GameObject, GameObject, bool, float)>();
+
+	private static string _searchText = "";
+
+	private static readonly System.Collections.Generic.List<(GameObject go, string label, int tabIndex)> _searchableItems = new System.Collections.Generic.List<(GameObject, string, int)>();
+
+	private static int _currentTabBeingBuilt = -1;
 
 	private const float PanelWidth = 3840f;
 
@@ -181,17 +193,19 @@ public static class TrainerPanel
 			obj.offsetMax = Vector2.zero;
 			BuildTabBar(_panelRoot.transform);
 			BuildSplitterWithIndicator(_panelRoot.transform);
+			BuildSearchBar(_panelRoot.transform);
 			GameObject val = CreateObj("ContentArea", _panelRoot.transform);
 			RectTransform component = val.GetComponent<RectTransform>();
 			component.anchorMin = Vector2.zero;
 			component.anchorMax = Vector2.one;
 			component.pivot = new Vector2(0.5f, 0.5f);
 			component.offsetMin = new Vector2(0f, 0f);
-			component.offsetMax = new Vector2(0f, -108f);
+			component.offsetMax = new Vector2(0f, -188f);
 			_tabContents = (GameObject[])(object)new GameObject[7];
 			string[] array = new string[7] { "Money", "Player", "Vehicles", "Business", "Gameplay", "Employees", "Rivals" };
 			for (int i = 0; i < 7; i++)
 			{
+				_currentTabBeingBuilt = i;
 				GameObject val2 = CreateScrollView(val.transform, array[i]);
 				Transform val3 = val2.transform.Find("Viewport/Content");
 				if (!((Object)(object)val3 == (Object)null))
@@ -222,6 +236,7 @@ public static class TrainerPanel
 						num = BuildRivalsTab(val3);
 						break;
 					}
+					_currentTabBeingBuilt = -1;
 					num += 20f;
 					RectTransform component2 = CreateTMP(val3, "Credit", "Made by ItzRealOzone", 22, new Color(1f, 1f, 1f, 0.35f), (FontStyles)2, (TextAlignmentOptions)514).GetComponent<RectTransform>();
 					component2.anchorMin = new Vector2(0f, 1f);
@@ -400,10 +415,18 @@ public static class TrainerPanel
 		_spriteBarBg = null;
 		_spriteScrollbar = null;
 		_gameFont = null;
+		_assetsCached = false;
+		_cardStates.Clear();
+		_searchableItems.Clear();
+		_searchText = "";
 	}
 
 	private static void FindGameAssets()
 	{
+		if (_assetsCached)
+		{
+			return;
+		}
 		MelonLogger.Msg("[TrainerPanel] Searching for game sprites...");
 		Il2CppArrayBase<Image> obj = Resources.FindObjectsOfTypeAll<Image>();
 		int num = 0;
@@ -474,6 +497,7 @@ public static class TrainerPanel
 		{
 			MelonLogger.Warning("[TrainerPanel] Game font NOT found! TMP text will use default font.");
 		}
+		_assetsCached = true;
 	}
 
 	private static void BuildTabBar(Transform parent)
@@ -528,10 +552,10 @@ public static class TrainerPanel
 			colors.fadeDuration = 0f;
 			((Selectable)obj).colors = colors;
 			CreateTMP(val2.transform, "Label", array[i], 50, (i == 0) ? TabTextActive : TabTextInactive, (FontStyles)0, (TextAlignmentOptions)514);
-			((UnityEvent)obj.onClick).AddListener(UnityAction.op_Implicit((Action)delegate
+			((UnityEvent)obj.onClick).AddListener((UnityAction)delegate
 			{
 				SwitchTab(tabIndex);
-			}));
+			});
 			_tabButtons[i] = val2;
 		}
 	}
@@ -560,7 +584,7 @@ public static class TrainerPanel
 		if ((Object)(object)_spriteSplitter != (Object)null)
 		{
 			val2.sprite = _spriteSplitter;
-			val2.type = (Type)1;
+			val2.type = (Image.Type)1;
 		}
 		((Graphic)val2).color = SplitterColor;
 		GameObject obj = CreateObj("Indicator", val.transform);
@@ -573,10 +597,86 @@ public static class TrainerPanel
 		if ((Object)(object)_spriteSplitter != (Object)null)
 		{
 			val3.sprite = _spriteSplitter;
-			val3.type = (Type)1;
+			val3.type = (Image.Type)1;
 		}
 		((Graphic)val3).color = Color.white;
 		_indicatorRect = component2;
+	}
+
+	private static void BuildSearchBar(Transform parent)
+	{
+		GameObject val = CreateObj("SearchBar", parent);
+		RectTransform component = val.GetComponent<RectTransform>();
+		component.anchorMin = new Vector2(0f, 1f);
+		component.anchorMax = new Vector2(0f, 1f);
+		component.pivot = new Vector2(0f, 1f);
+		component.anchoredPosition = new Vector2(100f, -108f);
+		component.sizeDelta = new Vector2(3610f, 80f);
+		Image val2 = val.AddComponent<Image>();
+		if ((Object)(object)_spriteRoundedBox != (Object)null)
+		{
+			val2.sprite = _spriteRoundedBox;
+			val2.type = (Image.Type)1;
+		}
+		((Graphic)val2).color = CardWhite;
+		CreateTMP(val.transform, "Label", "Search:", 32, CardTextDark, (FontStyles)0, (TextAlignmentOptions)513).GetComponent<RectTransform>().anchoredPosition = new Vector2(50f, 0f);
+		GameObject val3 = CreateObj("Input", val.transform);
+		RectTransform component2 = val3.GetComponent<RectTransform>();
+		component2.anchorMin = new Vector2(0f, 0.5f);
+		component2.anchorMax = new Vector2(0f, 0.5f);
+		component2.pivot = new Vector2(0f, 0.5f);
+		component2.anchoredPosition = new Vector2(250f, 0f);
+		component2.sizeDelta = new Vector2(3310f, 56f);
+		Image val4 = val3.AddComponent<Image>();
+		if ((Object)(object)_spriteRoundedBox != (Object)null)
+		{
+			val4.sprite = _spriteRoundedBox;
+			val4.type = (Image.Type)1;
+		}
+		((Graphic)val4).color = InputBg;
+		Il2CppTMPro.TMP_InputField val5 = val3.AddComponent<Il2CppTMPro.TMP_InputField>();
+		GameObject val6 = new GameObject("Text");
+		val6.transform.SetParent(val3.transform, false);
+		RectTransform obj = val6.AddComponent<RectTransform>();
+		obj.anchorMin = Vector2.zero;
+		obj.anchorMax = Vector2.one;
+		obj.offsetMin = new Vector2(16f, 4f);
+		obj.offsetMax = new Vector2(-16f, -4f);
+		Il2CppTMPro.TextMeshProUGUI val7 = val6.AddComponent<Il2CppTMPro.TextMeshProUGUI>();
+		((TMP_Text)val7).fontSize = 28;
+		((Graphic)val7).color = InputText;
+		((TMP_Text)val7).fontStyle = (FontStyles)0;
+		((TMP_Text)val7).alignment = (TextAlignmentOptions)513;
+		if ((Object)(object)_gameFont != (Object)null)
+		{
+			((TMP_Text)val7).font = _gameFont;
+		}
+		GameObject val8 = new GameObject("Placeholder");
+		val8.transform.SetParent(val3.transform, false);
+		RectTransform obj2 = val8.AddComponent<RectTransform>();
+		obj2.anchorMin = Vector2.zero;
+		obj2.anchorMax = Vector2.one;
+		obj2.offsetMin = new Vector2(16f, 4f);
+		obj2.offsetMax = new Vector2(-16f, -4f);
+		Il2CppTMPro.TextMeshProUGUI val9 = val8.AddComponent<Il2CppTMPro.TextMeshProUGUI>();
+		((TMP_Text)val9).text = "Type to filter buttons...";
+		((TMP_Text)val9).fontSize = 28;
+		((Graphic)val9).color = InputPlaceholder;
+		((TMP_Text)val9).fontStyle = (FontStyles)2;
+		((TMP_Text)val9).alignment = (TextAlignmentOptions)513;
+		if ((Object)(object)_gameFont != (Object)null)
+		{
+			((TMP_Text)val9).font = _gameFont;
+		}
+		val5.textComponent = val7;
+		val5.placeholder = (Graphic)(object)val9;
+		val5.text = "";
+		val5.onValueChanged.AddListener((UnityAction<string>)delegate(string text)
+		{
+			_searchText = text ?? "";
+			ApplySearchFilter();
+		});
+		MelonLogger.Msg("[TrainerPanel] Search bar built.");
 	}
 
 	private static void UpdateIndicatorPosition(int tabIndex)
@@ -594,6 +694,84 @@ public static class TrainerPanel
 			_indicatorRect.anchorMax = new Vector2(num3, 1f);
 			_indicatorRect.offsetMin = Vector2.zero;
 			_indicatorRect.offsetMax = Vector2.zero;
+		}
+	}
+
+	private static void ToggleCard(int index)
+	{
+		if (index < 0 || index >= _cardStates.Count)
+		{
+			return;
+		}
+		var value = _cardStates[index];
+		bool collapsed = !value.collapsed;
+		float oldHeight = collapsed ? value.originalHeight : 140f;
+		float newHeight = collapsed ? 140f : value.originalHeight;
+		float deltaY = oldHeight - newHeight;
+		for (int i = 0; i < value.card.transform.childCount; i++)
+		{
+			Transform child = value.card.transform.GetChild(i);
+			if ((Object)(object)child != (Object)null && (Object)(object)((Component)child).gameObject != (Object)(object)value.header)
+			{
+				((Component)child).gameObject.SetActive(!collapsed);
+			}
+		}
+		RectTransform cardRT = value.card.GetComponent<RectTransform>();
+		Vector2 size = cardRT.sizeDelta;
+		size.y = newHeight;
+		cardRT.sizeDelta = size;
+		float cardY = cardRT.anchoredPosition.y;
+		Transform contentParent = value.card.transform.parent;
+		if ((Object)(object)contentParent != (Object)null)
+		{
+			for (int j = 0; j < contentParent.childCount; j++)
+			{
+				Transform sibling = contentParent.GetChild(j);
+				if ((Object)(object)sibling != (Object)null && (Object)(object)((Component)sibling).gameObject != (Object)(object)value.card)
+				{
+					RectTransform siblingRT = ((Component)sibling).GetComponent<RectTransform>();
+					if ((Object)(object)siblingRT != (Object)null && siblingRT.anchoredPosition.y < cardY)
+					{
+						Vector2 pos = siblingRT.anchoredPosition;
+						pos.y += deltaY;
+						siblingRT.anchoredPosition = pos;
+					}
+				}
+			}
+			RectTransform contentRT = ((Component)contentParent).GetComponent<RectTransform>();
+			if ((Object)(object)contentRT != (Object)null)
+			{
+				Vector2 contentSize = contentRT.sizeDelta;
+				contentSize.y -= deltaY;
+				contentRT.sizeDelta = contentSize;
+			}
+		}
+		Transform headerTransform = value.header.transform;
+		Transform val = headerTransform.Find("CollapseArrow");
+		if ((Object)(object)val != (Object)null)
+		{
+			Il2CppTMPro.TextMeshProUGUI componentInChildren = val.GetComponentInChildren<Il2CppTMPro.TextMeshProUGUI>();
+			if ((Object)(object)componentInChildren != (Object)null)
+			{
+				((TMP_Text)componentInChildren).text = (collapsed ? "\u25b6" : "\u25bc");
+			}
+		}
+		_cardStates[index] = (value.name, value.card, value.header, collapsed, value.originalHeight);
+	}
+
+	private static void ApplySearchFilter()
+	{
+		bool flag = !string.IsNullOrEmpty(_searchText);
+		foreach (var item in _searchableItems)
+		{
+			if ((Object)(object)item.go != (Object)null && item.tabIndex == _activeTab)
+			{
+				bool active = !flag || item.label.IndexOf(_searchText, System.StringComparison.OrdinalIgnoreCase) >= 0;
+				if (item.go.activeSelf != active)
+				{
+					item.go.SetActive(active);
+				}
+			}
 		}
 	}
 
@@ -622,6 +800,7 @@ public static class TrainerPanel
 			}
 		}
 		UpdateIndicatorPosition(index);
+		ApplySearchFilter();
 	}
 
 	private static GameObject CreateScrollView(Transform parent, string name)
@@ -664,7 +843,7 @@ public static class TrainerPanel
 		ScrollRect val2 = val.AddComponent<ScrollRect>();
 		val2.horizontal = false;
 		val2.vertical = true;
-		val2.movementType = (MovementType)1;
+		val2.movementType = (ScrollRect.MovementType)1;
 		val2.scrollSensitivity = 40f;
 		((Graphic)val.AddComponent<Image>()).color = Color.clear;
 		GameObject val3 = CreateObj("Viewport", val.transform);
@@ -695,7 +874,7 @@ public static class TrainerPanel
 			if ((Object)(object)_spriteScrollbar != (Object)null)
 			{
 				val5.sprite = _spriteScrollbar;
-				val5.type = (Type)1;
+				val5.type = (Image.Type)1;
 			}
 			((Graphic)val5).color = new Color(1f, 1f, 1f, 0.05f);
 			GameObject val6 = CreateObj("Sliding Area", val4.transform);
@@ -714,15 +893,15 @@ public static class TrainerPanel
 			if ((Object)(object)_spriteScrollbar != (Object)null)
 			{
 				val7.sprite = _spriteScrollbar;
-				val7.type = (Type)1;
+				val7.type = (Image.Type)1;
 			}
 			((Graphic)val7).color = new Color(1f, 1f, 1f, 0.3f);
 			Scrollbar val8 = val4.AddComponent<Scrollbar>();
 			val8.handleRect = component6;
-			val8.direction = (Direction)2;
+			val8.direction = (Scrollbar.Direction)2;
 			((Selectable)val8).targetGraphic = (Graphic)(object)val7;
 			val2.verticalScrollbar = val8;
-			val2.verticalScrollbarVisibility = (ScrollbarVisibility)2;
+			val2.verticalScrollbarVisibility = (ScrollRect.ScrollbarVisibility)2;
 			val2.verticalScrollbarSpacing = -2f;
 		}
 		catch (Exception ex)
@@ -795,7 +974,7 @@ public static class TrainerPanel
 		Transform card2 = CreateCard(content, "Card_CustomMoney", 100f, num, 3610f, num4);
 		cy = 40f;
 		PlaceCardHeader(card2, "Custom Money", ref cy);
-		PlaceInputWithButton(card2, ref cy, "Amount to Add:", "e.g. 25000", "Add", BtnBlue, (ContentType)3, delegate(string inputText)
+		PlaceInputWithButton(card2, ref cy, "Amount to Add:", "e.g. 25000", "Add", BtnBlue, (InputField.ContentType)3, delegate(string inputText)
 		{
 			if (float.TryParse(inputText, out var result))
 			{
@@ -807,7 +986,7 @@ public static class TrainerPanel
 				Toast("Invalid amount");
 			}
 		});
-		PlaceInputWithButton(card2, ref cy, "Set Money To:", "e.g. 100000", "Set", BtnWarning, (ContentType)3, delegate(string inputText)
+		PlaceInputWithButton(card2, ref cy, "Set Money To:", "e.g. 100000", "Set", BtnWarning, (InputField.ContentType)3, delegate(string inputText)
 		{
 			if (float.TryParse(inputText, out var result))
 			{
@@ -824,21 +1003,9 @@ public static class TrainerPanel
 		Transform card3 = CreateCard(content, "Card_EconomySettings", 100f, num, 3610f, num5);
 		cy = 40f;
 		PlaceCardHeader(card3, "Economy Settings", ref cy);
-		PlaceSlider(card3, ref cy, "Tax Percentage", 0f, 100f, MoneyModule.TaxPercentage, wholeNumbers: true, delegate(float val)
-		{
-			MoneyModule.ApplyTaxPercentage((int)val);
-			Toast($"Tax set to {(int)val}%");
-		});
-		PlaceSlider(card3, ref cy, "Market Price Multiplier", 0.1f, 5f, MoneyModule.MarketPriceMultiplier, wholeNumbers: false, delegate(float val)
-		{
-			MoneyModule.ApplyMarketPriceMultiplier(val);
-			Toast($"Market price: {val:F1}x");
-		});
-		PlaceSlider(card3, ref cy, "Export Multiplier", 0.1f, 10f, MoneyModule.ExportMultiplier, wholeNumbers: false, delegate(float val)
-		{
-			MoneyModule.ApplyExportMultiplier(val);
-			Toast($"Export: {val:F1}x");
-		});
+		PlaceSlider(card3, ref cy, "Tax Percentage", 0f, 100f, MoneyModule.TaxPercentage, wholeNumbers: true, onChanged: (val) => MoneyModule.ApplyTaxPercentage((int)val), onReleased: (val) => Toast($"Tax set to {(int)val}%"));
+		PlaceSlider(card3, ref cy, "Market Price Multiplier", 0.1f, 5f, MoneyModule.MarketPriceMultiplier, wholeNumbers: false, onChanged: (val) => MoneyModule.ApplyMarketPriceMultiplier(val), onReleased: (val) => Toast($"Market price: {val:F1}x"));
+		PlaceSlider(card3, ref cy, "Export Multiplier", 0.1f, 10f, MoneyModule.ExportMultiplier, wholeNumbers: false, onChanged: (val) => MoneyModule.ApplyExportMultiplier(val), onReleased: (val) => Toast($"Export: {val:F1}x"));
 		return num + (num5 + 40f);
 	}
 
@@ -882,11 +1049,7 @@ public static class TrainerPanel
 		cy = 40f;
 		PlaceCardHeader(card2, "Energy & Stats", ref cy);
 		PlaceSectionLabel(card2, "Energy", ref cy);
-		PlaceSlider(card2, ref cy, "Energy Level", 0f, 100f, 100f, wholeNumbers: true, delegate(float val)
-		{
-			PlayerStatsModule.SetEnergy(val);
-			Toast($"Energy: {(int)val}");
-		});
+		PlaceSlider(card2, ref cy, "Energy Level", 0f, 100f, 100f, wholeNumbers: true, onChanged: (val) => PlayerStatsModule.SetEnergy(val), onReleased: (val) => Toast($"Energy: {(int)val}"));
 		Transform row = PlaceRow(card2, ref cy, 4);
 		ActionBtn(row, "25", BtnNeutral, delegate
 		{
@@ -1157,36 +1320,12 @@ public static class TrainerPanel
 		Transform card3 = CreateCard(content, "Card_Multipliers", 100f, num, 3610f, num4);
 		cy = 40f;
 		PlaceCardHeader(card3, "Business Multipliers", ref cy);
-		PlaceSlider(card3, ref cy, "Customer Promotion Mult", 0.1f, 10f, 1f, wholeNumbers: false, delegate(float val)
-		{
-			BusinessModule.ApplyCustomerPromotionMultiplier(val);
-			Toast($"Promotion: {val:F1}x");
-		});
-		PlaceSlider(card3, ref cy, "Employee Salary Mult", 0f, 5f, 1f, wholeNumbers: false, delegate(float val)
-		{
-			BusinessModule.ApplyEmployeeSalaryMultiplier(val);
-			Toast($"Salary: {val:F1}x");
-		});
-		PlaceSlider(card3, ref cy, "Wholesale Urgent Fee Mult", 0f, 5f, 1f, wholeNumbers: false, delegate(float val)
-		{
-			BusinessModule.ApplyWholesaleUrgentFeeMultiplier(val);
-			Toast($"Wholesale fee: {val:F1}x");
-		});
-		PlaceSlider(card3, ref cy, "Importer Urgent Fee Mult", 0f, 5f, 1f, wholeNumbers: false, delegate(float val)
-		{
-			BusinessModule.ApplyImporterUrgentFeeMultiplier(val);
-			Toast($"Importer fee: {val:F1}x");
-		});
-		PlaceSlider(card3, ref cy, "Bank Interest Rate", 0f, 50f, 5f, wholeNumbers: true, delegate(float val)
-		{
-			BusinessModule.ApplyBankInterestRate(val);
-			Toast($"Interest: {(int)val}%");
-		});
-		PlaceSlider(card3, ref cy, "Rivals Difficulty Mult", 0f, 5f, 1f, wholeNumbers: false, delegate(float val)
-		{
-			BusinessModule.ApplyRivalsDifficultyMultiplier(val);
-			Toast($"Rivals: {val:F1}x");
-		});
+		PlaceSlider(card3, ref cy, "Customer Promotion Mult", 0.1f, 10f, 1f, wholeNumbers: false, onChanged: (val) => BusinessModule.ApplyCustomerPromotionMultiplier(val), onReleased: (val) => Toast($"Promotion: {val:F1}x"));
+		PlaceSlider(card3, ref cy, "Employee Salary Mult", 0f, 5f, 1f, wholeNumbers: false, onChanged: (val) => BusinessModule.ApplyEmployeeSalaryMultiplier(val), onReleased: (val) => Toast($"Salary: {val:F1}x"));
+		PlaceSlider(card3, ref cy, "Wholesale Urgent Fee Mult", 0f, 5f, 1f, wholeNumbers: false, onChanged: (val) => BusinessModule.ApplyWholesaleUrgentFeeMultiplier(val), onReleased: (val) => Toast($"Wholesale fee: {val:F1}x"));
+		PlaceSlider(card3, ref cy, "Importer Urgent Fee Mult", 0f, 5f, 1f, wholeNumbers: false, onChanged: (val) => BusinessModule.ApplyImporterUrgentFeeMultiplier(val), onReleased: (val) => Toast($"Importer fee: {val:F1}x"));
+		PlaceSlider(card3, ref cy, "Bank Interest Rate", 0f, 50f, 5f, wholeNumbers: true, onChanged: (val) => BusinessModule.ApplyBankInterestRate(val), onReleased: (val) => Toast($"Interest: {(int)val}%"));
+		PlaceSlider(card3, ref cy, "Rivals Difficulty Mult", 0f, 5f, 1f, wholeNumbers: false, onChanged: (val) => BusinessModule.ApplyRivalsDifficultyMultiplier(val), onReleased: (val) => Toast($"Rivals: {val:F1}x"));
 		return num + (num4 + 40f);
 	}
 
@@ -1216,11 +1355,7 @@ public static class TrainerPanel
 		Transform card = CreateCard(content, "Card_GameSpeed", 100f, num, 3610f, num2);
 		float cy = 40f;
 		PlaceCardHeader(card, "Game Speed", ref cy);
-		PlaceSlider(card, ref cy, "Speed Multiplier", 0f, 10f, GameplayModule.GameSpeed, wholeNumbers: false, delegate(float val)
-		{
-			GameplayModule.SetGameSpeed(val);
-			Toast($"Speed: {val:F1}x");
-		});
+		PlaceSlider(card, ref cy, "Speed Multiplier", 0f, 10f, GameplayModule.GameSpeed, wholeNumbers: false, onChanged: (val) => GameplayModule.SetGameSpeed(val), onReleased: (val) => Toast($"Speed: {val:F1}x"));
 		Transform row = PlaceRow(card, ref cy, 5);
 		ActionBtn(row, "Pause", BtnDanger, delegate
 		{
@@ -1362,11 +1497,7 @@ public static class TrainerPanel
 		Transform card7 = CreateCard(content, "Card_BankInterest", 100f, num, 3610f, num8);
 		cy = 40f;
 		PlaceCardHeader(card7, "Bank Interest Multiplier", ref cy);
-		PlaceSlider(card7, ref cy, "Interest Multiplier", 0f, 5f, WorldModule.BankInterestMultiplier, wholeNumbers: false, delegate(float val)
-		{
-			WorldModule.ApplyBankInterestMultiplier(val);
-			Toast($"Interest mult: {val:F1}x");
-		});
+		PlaceSlider(card7, ref cy, "Interest Multiplier", 0f, 5f, WorldModule.BankInterestMultiplier, wholeNumbers: false, onChanged: (val) => WorldModule.ApplyBankInterestMultiplier(val), onReleased: (val) => Toast($"Interest mult: {val:F1}x"));
 		num += num8 + 40f;
 		float num9 = 240f;
 		Transform card8 = CreateCard(content, "Card_SaveGame", 100f, num, 3610f, num9);
@@ -1411,11 +1542,7 @@ public static class TrainerPanel
 		Transform card2 = CreateCard(content, "Card_Salary", 100f, num, 3610f, num3);
 		cy = 40f;
 		PlaceCardHeader(card2, "Salary Multiplier", ref cy);
-		PlaceSlider(card2, ref cy, "Salary Multiplier", 0f, 5f, EmployeeModule.SalaryMultiplier, wholeNumbers: false, delegate(float val)
-		{
-			EmployeeModule.ApplySalaryMultiplier(val);
-			Toast($"Salary: {val:F1}x");
-		});
+		PlaceSlider(card2, ref cy, "Salary Multiplier", 0f, 5f, EmployeeModule.SalaryMultiplier, wholeNumbers: false, onChanged: (val) => EmployeeModule.ApplySalaryMultiplier(val), onReleased: (val) => Toast($"Salary: {val:F1}x"));
 		Transform row = PlaceRow(card2, ref cy, 4);
 		ActionBtn(row, "Free", BtnSuccess, delegate
 		{
@@ -1442,7 +1569,7 @@ public static class TrainerPanel
 		Transform card3 = CreateCard(content, "Card_SetWages", 100f, num, 3610f, num4);
 		cy = 40f;
 		PlaceCardHeader(card3, "Set Wages", ref cy);
-		PlaceInputWithButton(card3, ref cy, "Wage for All:", "e.g. 15.00", "Set All Wages", BtnBlue, (ContentType)3, delegate(string inputText)
+		PlaceInputWithButton(card3, ref cy, "Wage for All:", "e.g. 15.00", "Set All Wages", BtnBlue, (InputField.ContentType)3, delegate(string inputText)
 		{
 			if (float.TryParse(inputText, out var result))
 			{
@@ -1455,53 +1582,63 @@ public static class TrainerPanel
 			}
 		});
 		num += num4 + 40f;
-		float num5 = 604f;
+		float num5 = 704f;
 		Transform card4 = CreateCard(content, "Card_Candidates", 100f, num, 3610f, num5);
 		cy = 40f;
 		PlaceCardHeader(card4, "Generate Recruitment Candidates", ref cy);
-		PlaceHelpText(card4, "Generate a skill level 80 candidate for recruitment.", ref cy);
+		PlaceInputWithButton(card4, ref cy, "Skill Level (1-100):", "e.g. 100", "Set", BtnBlue, (InputField.ContentType)3, delegate(string inputText)
+		{
+			if (int.TryParse(inputText, out var result) && result >= 1 && result <= 100)
+			{
+				EmployeeModule.CandidateSkillLevel = result;
+			}
+			else
+			{
+				Toast("Enter 1-100");
+			}
+		});
 		Transform row2 = PlaceRow(card4, ref cy, 2);
 		ActionBtn(row2, "CustService", BtnBlue, delegate
 		{
-			EmployeeModule.GenerateCandidate(0, 80);
+			EmployeeModule.GenerateCandidate(0, EmployeeModule.CandidateSkillLevel);
 			Toast("Candidate generated!");
 		}, 0, 2);
 		ActionBtn(row2, "Cleaning", BtnBlue, delegate
 		{
-			EmployeeModule.GenerateCandidate(1, 80);
+			EmployeeModule.GenerateCandidate(1, EmployeeModule.CandidateSkillLevel);
 			Toast("Candidate generated!");
 		}, 1, 2);
 		Transform row3 = PlaceRow(card4, ref cy, 2);
 		ActionBtn(row3, "Lawyer", BtnBlue, delegate
 		{
-			EmployeeModule.GenerateCandidate(2, 80);
+			EmployeeModule.GenerateCandidate(2, EmployeeModule.CandidateSkillLevel);
 			Toast("Candidate generated!");
 		}, 0, 2);
 		ActionBtn(row3, "Purchasing", BtnBlue, delegate
 		{
-			EmployeeModule.GenerateCandidate(3, 80);
+			EmployeeModule.GenerateCandidate(3, EmployeeModule.CandidateSkillLevel);
 			Toast("Candidate generated!");
 		}, 1, 2);
 		Transform row4 = PlaceRow(card4, ref cy, 2);
 		ActionBtn(row4, "Logistics", BtnBlue, delegate
 		{
-			EmployeeModule.GenerateCandidate(4, 80);
+			EmployeeModule.GenerateCandidate(4, EmployeeModule.CandidateSkillLevel);
 			Toast("Candidate generated!");
 		}, 0, 2);
 		ActionBtn(row4, "Delivery", BtnBlue, delegate
 		{
-			EmployeeModule.GenerateCandidate(5, 80);
+			EmployeeModule.GenerateCandidate(5, EmployeeModule.CandidateSkillLevel);
 			Toast("Candidate generated!");
 		}, 1, 2);
 		Transform row5 = PlaceRow(card4, ref cy, 2);
 		ActionBtn(row5, "Programmer", BtnBlue, delegate
 		{
-			EmployeeModule.GenerateCandidate(6, 80);
+			EmployeeModule.GenerateCandidate(6, EmployeeModule.CandidateSkillLevel);
 			Toast("Candidate generated!");
 		}, 0, 2);
 		ActionBtn(row5, "HR Manager", BtnBlue, delegate
 		{
-			EmployeeModule.GenerateCandidate(7, 80);
+			EmployeeModule.GenerateCandidate(7, EmployeeModule.CandidateSkillLevel);
 			Toast("Candidate generated!");
 		}, 1, 2);
 		return num + (num5 + 40f);
@@ -1590,7 +1727,7 @@ public static class TrainerPanel
 		if ((Object)(object)_spriteRoundedBox != (Object)null)
 		{
 			val.sprite = _spriteRoundedBox;
-			val.type = (Type)1;
+			val.type = (Image.Type)1;
 		}
 		((Graphic)val).color = CardWhite;
 		return obj.transform;
@@ -1598,13 +1735,8 @@ public static class TrainerPanel
 
 	private static void PlaceCardHeader(Transform card, string title, ref float cy)
 	{
-		//IL_0022: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0037: Unknown result type (might be due to invalid IL or missing references)
-		//IL_004c: Unknown result type (might be due to invalid IL or missing references)
-		//IL_005f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0086: Unknown result type (might be due to invalid IL or missing references)
 		float num = 3510f;
+		GameObject cardGO = ((Component)card).gameObject;
 		GameObject obj = CreateObj("Header", card);
 		RectTransform component = obj.GetComponent<RectTransform>();
 		component.anchorMin = new Vector2(0f, 1f);
@@ -1613,6 +1745,32 @@ public static class TrainerPanel
 		component.anchoredPosition = new Vector2(50f, 0f - cy);
 		component.sizeDelta = new Vector2(num, 60f);
 		CreateTMP(obj.transform, "Text", title, 50, CardTextDark, (FontStyles)1, (TextAlignmentOptions)513);
+		int cardIndex = _cardStates.Count;
+		float origHeight = ((Component)card).GetComponent<RectTransform>().sizeDelta.y;
+		_cardStates.Add((title, cardGO, obj, false, origHeight));
+		GameObject arrowGO = CreateObj("CollapseArrow", obj.transform);
+		RectTransform arrowRT = arrowGO.GetComponent<RectTransform>();
+		arrowRT.anchorMin = new Vector2(1f, 0.5f);
+		arrowRT.anchorMax = new Vector2(1f, 0.5f);
+		arrowRT.pivot = new Vector2(1f, 0.5f);
+		arrowRT.anchoredPosition = new Vector2(-20f, 0f);
+		arrowRT.sizeDelta = new Vector2(44f, 44f);
+		CreateTMP(arrowGO.transform, "Arrow", "\u25bc", 24, CardTextMuted, (FontStyles)0, (TextAlignmentOptions)514);
+		Image arrowImg = arrowGO.AddComponent<Image>();
+		((Graphic)arrowImg).color = Color.clear;
+		((Graphic)arrowImg).raycastTarget = true;
+		Button arrowBtn = arrowGO.AddComponent<Button>();
+		((Selectable)arrowBtn).targetGraphic = (Graphic)(object)arrowImg;
+		ColorBlock arrowColors = ((Selectable)arrowBtn).colors;
+		arrowColors.normalColor = Color.white;
+		arrowColors.highlightedColor = new Color(0.9f, 0.9f, 0.9f, 1f);
+		arrowColors.pressedColor = new Color(0.75f, 0.75f, 0.75f, 1f);
+		arrowColors.fadeDuration = 0.08f;
+		((Selectable)arrowBtn).colors = arrowColors;
+		((UnityEvent)arrowBtn.onClick).AddListener((UnityAction)delegate
+		{
+			ToggleCard(cardIndex);
+		});
 		cy += 80f;
 	}
 
@@ -1642,20 +1800,6 @@ public static class TrainerPanel
 
 	private static void ActionBtn(Transform row, string label, Color bgColor, Action onClick, int index, int count)
 	{
-		//IL_001a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_006a: Unknown result type (might be due to invalid IL or missing references)
-		//IL_007f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0094: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00a5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00b5: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ea: Unknown result type (might be due to invalid IL or missing references)
-		//IL_00ff: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0104: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0108: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0128: Unknown result type (might be due to invalid IL or missing references)
-		//IL_0148: Unknown result type (might be due to invalid IL or missing references)
-		//IL_015f: Unknown result type (might be due to invalid IL or missing references)
-		//IL_019b: Unknown result type (might be due to invalid IL or missing references)
 		float x = ((Component)row).GetComponent<RectTransform>().sizeDelta.x;
 		float num = 16f * (float)(count - 1);
 		float num2 = (x - num) / (float)count;
@@ -1671,19 +1815,19 @@ public static class TrainerPanel
 		if ((Object)(object)_spriteRoundedBox != (Object)null)
 		{
 			val.sprite = _spriteRoundedBox;
-			val.type = (Type)1;
+			val.type = (Image.Type)1;
 		}
 		((Graphic)val).color = bgColor;
 		((Graphic)val).raycastTarget = true;
-		Button obj2 = obj.AddComponent<Button>();
-		ColorBlock colors = ((Selectable)obj2).colors;
+		Button btn = obj.AddComponent<Button>();
+		ColorBlock colors = ((Selectable)btn).colors;
 		colors.normalColor = Color.white;
 		colors.highlightedColor = new Color(0.9f, 0.9f, 0.9f, 1f);
 		colors.pressedColor = new Color(0.75f, 0.75f, 0.75f, 1f);
 		colors.fadeDuration = 0.08f;
-		((Selectable)obj2).colors = colors;
-		((Selectable)obj2).targetGraphic = (Graphic)(object)val;
-		((UnityEvent)obj2.onClick).AddListener(UnityAction.op_Implicit((Action)delegate
+		((Selectable)btn).colors = colors;
+		((Selectable)btn).targetGraphic = (Graphic)(object)val;
+		((UnityEvent)btn.onClick).AddListener((UnityAction)delegate
 		{
 			try
 			{
@@ -1693,8 +1837,21 @@ public static class TrainerPanel
 			{
 				MelonLogger.Warning("[TrainerPanel] Button '" + label + "' error: " + ex.Message);
 			}
-		}));
+		});
 		CreateTMP(obj.transform, "Label", label, 32, Color.white, (FontStyles)1, (TextAlignmentOptions)514);
+		if (_currentTabBeingBuilt >= 0)
+		{
+			_searchableItems.Add((obj, label, _currentTabBeingBuilt));
+		}
+		EventTrigger trigger = obj.AddComponent<EventTrigger>();
+		EventTrigger.Entry enterEntry = new EventTrigger.Entry();
+		enterEntry.eventID = EventTriggerType.PointerEnter;
+		enterEntry.callback.AddListener((UnityAction<BaseEventData>)delegate { TooltipManager.Show(label); });
+		trigger.triggers.Add(enterEntry);
+		EventTrigger.Entry exitEntry = new EventTrigger.Entry();
+		exitEntry.eventID = EventTriggerType.PointerExit;
+		exitEntry.callback.AddListener((UnityAction<BaseEventData>)delegate { TooltipManager.Hide(); });
+		trigger.triggers.Add(exitEntry);
 	}
 
 	private static void PlaceToggle(Transform card, ref float cy, string label, bool initialValue, Action<bool> onChanged)
@@ -1731,7 +1888,7 @@ public static class TrainerPanel
 		if ((Object)(object)_spriteRoundedBox != (Object)null)
 		{
 			val2.sprite = _spriteRoundedBox;
-			val2.type = (Type)1;
+			val2.type = (Image.Type)1;
 		}
 		((Graphic)val2).color = ListBg;
 		float num2 = 24f;
@@ -1756,18 +1913,15 @@ public static class TrainerPanel
 		if ((Object)(object)_spriteRoundedBox != (Object)null)
 		{
 			toggleImg.sprite = _spriteRoundedBox;
-			toggleImg.type = (Type)1;
+			toggleImg.type = (Image.Type)1;
 		}
 		((Graphic)toggleImg).color = (initialValue ? ToggleOn : ToggleOff);
 		Button obj2 = val3.AddComponent<Button>();
 		((Selectable)obj2).targetGraphic = (Graphic)(object)toggleImg;
 		GameObject statusGO = CreateTMP(val3.transform, "Status", initialValue ? "ON" : "OFF", 28, Color.white, (FontStyles)1, (TextAlignmentOptions)514);
 		bool current = initialValue;
-		((UnityEvent)obj2.onClick).AddListener(UnityAction.op_Implicit((Action)delegate
+((UnityEvent)obj2.onClick).AddListener((UnityAction)delegate
 		{
-			//IL_003b: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0034: Unknown result type (might be due to invalid IL or missing references)
-			//IL_0075: Unknown result type (might be due to invalid IL or missing references)
 			try
 			{
 				current = !current;
@@ -1784,11 +1938,11 @@ public static class TrainerPanel
 			{
 				MelonLogger.Warning("[TrainerPanel] Toggle error: " + ex.Message);
 			}
-		}));
+		});
 		cy += 100f;
 	}
 
-	private static void PlaceSlider(Transform card, ref float cy, string label, float min, float max, float initial, bool wholeNumbers, Action<float> onChanged)
+	private static void PlaceSlider(Transform card, ref float cy, string label, float min, float max, float initial, bool wholeNumbers, Action<float> onChanged, Action<float> onReleased = null)
 	{
 		//IL_004b: Unknown result type (might be due to invalid IL or missing references)
 		//IL_0060: Unknown result type (might be due to invalid IL or missing references)
@@ -1891,7 +2045,7 @@ public static class TrainerPanel
 		if ((Object)(object)_spriteRoundedBox != (Object)null)
 		{
 			val4.sprite = _spriteRoundedBox;
-			val4.type = (Type)1;
+			val4.type = (Image.Type)1;
 		}
 		((Graphic)val4).color = SliderTrack;
 		GameObject val5 = CreateObj("Fill Area", val3.transform);
@@ -1912,7 +2066,7 @@ public static class TrainerPanel
 		if ((Object)(object)_spriteRoundedBox != (Object)null)
 		{
 			val6.sprite = _spriteRoundedBox;
-			val6.type = (Type)1;
+			val6.type = (Image.Type)1;
 		}
 		((Graphic)val6).color = SliderFill;
 		GameObject val7 = CreateObj("Handle Slide Area", val3.transform);
@@ -1933,7 +2087,7 @@ public static class TrainerPanel
 		if ((Object)(object)_spriteRoundedBox != (Object)null)
 		{
 			val8.sprite = _spriteRoundedBox;
-			val8.type = (Type)1;
+			val8.type = (Image.Type)1;
 		}
 		((Graphic)val8).color = SliderHandle;
 		Slider obj6 = val3.AddComponent<Slider>();
@@ -1944,7 +2098,7 @@ public static class TrainerPanel
 		((Selectable)obj6).targetGraphic = (Graphic)(object)val8;
 		obj6.fillRect = component7;
 		obj6.handleRect = component9;
-		((UnityEvent<float>)(object)obj6.onValueChanged).AddListener(UnityAction<float>.op_Implicit((Action<float>)delegate(float num9)
+		((UnityEvent<float>)(object)obj6.onValueChanged).AddListener((UnityAction<float>)delegate(float num9)
 		{
 			try
 			{
@@ -1958,11 +2112,29 @@ public static class TrainerPanel
 			{
 				MelonLogger.Warning("[TrainerPanel] Slider '" + label + "' error: " + ex.Message);
 			}
-		}));
+		});
+		if (onReleased != null)
+		{
+			EventTrigger sliderTrigger = val3.AddComponent<EventTrigger>();
+			EventTrigger.Entry pointerUpEntry = new EventTrigger.Entry();
+			pointerUpEntry.eventID = EventTriggerType.PointerUp;
+			pointerUpEntry.callback.AddListener((UnityAction<BaseEventData>)delegate
+			{
+				try
+				{
+					onReleased(obj6.value);
+				}
+				catch (Exception ex2)
+				{
+					MelonLogger.Warning("[TrainerPanel] Slider release '" + label + "' error: " + ex2.Message);
+				}
+			});
+			sliderTrigger.triggers.Add(pointerUpEntry);
+		}
 		cy += 140f;
 	}
 
-	private static void PlaceInputWithButton(Transform card, ref float cy, string label, string placeholder, string buttonLabel, Color buttonColor, ContentType contentType, Action<string> onSubmit)
+	private static void PlaceInputWithButton(Transform card, ref float cy, string label, string placeholder, string buttonLabel, Color buttonColor, InputField.ContentType contentType, Action<string> onSubmit)
 	{
 		//IL_0068: Unknown result type (might be due to invalid IL or missing references)
 		//IL_007d: Unknown result type (might be due to invalid IL or missing references)
@@ -2043,7 +2215,7 @@ public static class TrainerPanel
 		if ((Object)(object)_spriteRoundedBox != (Object)null)
 		{
 			val3.sprite = _spriteRoundedBox;
-			val3.type = (Type)1;
+			val3.type = (Image.Type)1;
 		}
 		((Graphic)val3).color = InputBg;
 		GameObject val4 = new GameObject("Text");
@@ -2091,7 +2263,7 @@ public static class TrainerPanel
 		if ((Object)(object)_spriteRoundedBox != (Object)null)
 		{
 			val9.sprite = _spriteRoundedBox;
-			val9.type = (Type)1;
+			val9.type = (Image.Type)1;
 		}
 		((Graphic)val9).color = buttonColor;
 		Button obj4 = val8.AddComponent<Button>();
@@ -2103,7 +2275,7 @@ public static class TrainerPanel
 		colors.fadeDuration = 0.08f;
 		((Selectable)obj4).colors = colors;
 		CreateTMP(val8.transform, "Label", buttonLabel, 28, Color.white, (FontStyles)1, (TextAlignmentOptions)514);
-		((UnityEvent)obj4.onClick).AddListener(UnityAction.op_Implicit((Action)delegate
+		((UnityEvent)obj4.onClick).AddListener((UnityAction)delegate
 		{
 			try
 			{
@@ -2114,7 +2286,7 @@ public static class TrainerPanel
 			{
 				MelonLogger.Warning("[TrainerPanel] Input '" + label + "' error: " + ex.Message);
 			}
-		}));
+		});
 		cy += 100f;
 	}
 
@@ -2199,7 +2371,7 @@ public static class TrainerPanel
 		if ((Object)(object)_spriteRoundedBox != (Object)null)
 		{
 			val5.sprite = _spriteRoundedBox;
-			val5.type = (Type)1;
+			val5.type = (Image.Type)1;
 		}
 		((Graphic)val5).color = buttonColor;
 		Button obj3 = val4.AddComponent<Button>();
@@ -2211,7 +2383,7 @@ public static class TrainerPanel
 		colors.fadeDuration = 0.08f;
 		((Selectable)obj3).colors = colors;
 		CreateTMP(val4.transform, "Label", buttonLabel, 28, Color.white, (FontStyles)1, (TextAlignmentOptions)514);
-		((UnityEvent)obj3.onClick).AddListener(UnityAction.op_Implicit((Action)delegate
+		((UnityEvent)obj3.onClick).AddListener((UnityAction)delegate
 		{
 			try
 			{
@@ -2223,7 +2395,7 @@ public static class TrainerPanel
 			{
 				MelonLogger.Warning("[TrainerPanel] DualInput error: " + ex.Message);
 			}
-		}));
+		});
 		cy += 100f;
 	}
 
@@ -2262,7 +2434,7 @@ public static class TrainerPanel
 		if ((Object)(object)_spriteRoundedBox != (Object)null)
 		{
 			val2.sprite = _spriteRoundedBox;
-			val2.type = (Type)1;
+			val2.type = (Image.Type)1;
 		}
 		((Graphic)val2).color = InputBg;
 		GameObject val3 = new GameObject("Text");
@@ -2296,7 +2468,7 @@ public static class TrainerPanel
 		InputField obj3 = val.AddComponent<InputField>();
 		obj3.textComponent = val4;
 		obj3.placeholder = (Graphic)(object)val6;
-		obj3.contentType = (ContentType)2;
+		obj3.contentType = (InputField.ContentType)2;
 		((Selectable)obj3).targetGraphic = (Graphic)(object)val2;
 		return val;
 	}

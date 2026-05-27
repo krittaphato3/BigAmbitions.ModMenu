@@ -48,5 +48,8 @@ bld/
 Thumbs.db
 Desktop.ini
 
+# MelonLoader runtime
+MelonLoader/
+
 # Kilo config
 .kilo/

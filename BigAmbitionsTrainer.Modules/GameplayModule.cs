@@ -8,6 +8,7 @@ using Il2CppHelpers;
 using Il2CppSystem.Collections.Generic;
 using MelonLoader;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace BigAmbitionsTrainer.Modules;
 
@@ -218,11 +219,11 @@ public static class GameplayModule
 				return;
 			}
 			int day = current.Day;
-			List<DeliveryContract> deliveryContracts = current.DeliveryContracts;
+			var deliveryContracts = current.DeliveryContracts;
 			int num = 0;
 			if (deliveryContracts != null)
 			{
-				Enumerator<DeliveryContract> enumerator = deliveryContracts.GetEnumerator();
+				var enumerator = deliveryContracts.GetEnumerator();
 				while (enumerator.MoveNext())
 				{
 					DeliveryContract current2 = enumerator.Current;
@@ -259,12 +260,12 @@ public static class GameplayModule
 				return;
 			}
 			int day = current.Day;
-			List<DeliveryContract> deliveryContracts = current.DeliveryContracts;
+			var deliveryContracts = current.DeliveryContracts;
 			int num = 0;
-			List<float> list = new List<float>();
+			var list = new System.Collections.Generic.List<float>();
 			if (deliveryContracts != null)
 			{
-				Enumerator<DeliveryContract> enumerator = deliveryContracts.GetEnumerator();
+				var enumerator = deliveryContracts.GetEnumerator();
 				while (enumerator.MoveNext())
 				{
 					DeliveryContract current2 = enumerator.Current;

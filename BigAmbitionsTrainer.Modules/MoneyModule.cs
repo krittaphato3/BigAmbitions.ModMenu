@@ -6,6 +6,10 @@ namespace BigAmbitionsTrainer.Modules;
 
 public static class MoneyModule
 {
+	private static int _readCooldown;
+
+	private const int ReadInterval = 30;
+
 	public static float CurrentMoney { get; private set; }
 
 	public static float CurrentNetWorth { get; private set; }
@@ -22,11 +26,18 @@ public static class MoneyModule
 
 	public static void Initialize()
 	{
+		_readCooldown = 5;
 		MelonLogger.Msg("[MoneyModule] Initialized.");
 	}
 
 	public static void OnUpdate()
 	{
+		_readCooldown--;
+		if (_readCooldown > 0)
+		{
+			return;
+		}
+		_readCooldown = ReadInterval;
 		try
 		{
 			GameInstance current = SaveGameManager.Current;
