@@ -1,4 +1,4 @@
-# ItzRealOzone Trainer
+# ItzRealOzone Trainer (BETA)
 
 A MelonLoader mod for **Big Ambitions** (Hovgaard Games) that adds an in-game trainer accessible via the in-game phone and a standalone F8 overlay. Made by ItzRealOzone.
 
