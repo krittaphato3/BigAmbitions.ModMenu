@@ -1,4 +1,4 @@
-# ItzRealOzone Trainer (BETA)
+# ItzRealOzone Trainer v1.0.1
 
 A MelonLoader mod for **Big Ambitions** (Hovgaard Games) that adds an in-game trainer accessible via the in-game phone and a standalone F8 overlay. Made by ItzRealOzone.
 
@@ -152,7 +152,7 @@ Place the required MelonLoader and game assemblies (MelonLoader.dll, Il2CppBigAm
 ## Technical Overview
 
 - **Framework**: .NET 6.0 (Il2Cpp / MelonLoader)
-- **Language**: C# 15.0, file-scoped namespaces
+- **Language**: C# 11.0, file-scoped namespaces
 - **Phone UI**: Built entirely at runtime using Unity uGUI components (no asset bundles). Clones an existing phone app button and hooks click events. The game's native layout groups handle button positioning — no manual override of existing button sizes.
 - **F8 Overlay**: Custom IMGUI UI rendered via `OnGUI`. Avoids stripped IL2CPP methods (`GUI.Button`, `GUI.BeginScrollView`, `GUI.skin`) by using manual hit-testing, `GUI.BeginGroup`, and `GUIStyleState`-only construction. Background and text are drawn in separate passes matching the ToastNotification pattern for reliable rendering.
 - **Toasts**: Custom IMGUI-based notification system rendered via `OnGUI`
@@ -167,6 +167,20 @@ Place the required MelonLoader and game assemblies (MelonLoader.dll, Il2CppBigAm
 - **Candidate skill slider**: Employee tab slider (1–100) for generated candidate skill levels
 - **Toast configuration**: Duration and fade timing configurable via MelonPreferences
 - **Settings save/load**: Persist and restore all toggle states from the Settings tab
+
+## Changelog
+
+### v1.0.2
+- **Fix**: Fill All Needs no longer throws NullReferenceException when no game save is loaded
+- **Fix**: Set Energy, Change Happiness, and Change Hunger now guard against null game state
+
+### v1.0.1
+- **Fix**: Phone Trainer button now appears on first game join without needing to toggle settings off/on
+- **Fix**: All settings now auto-save when the game exits (including F8 toggle options)
+- **Improvement**: Phone injection retries indefinitely until the phone UI becomes available
+
+### v3.0.0
+- Initial release
 
 ## Performance
 

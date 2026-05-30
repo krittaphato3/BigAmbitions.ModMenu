@@ -146,6 +146,7 @@ public static class PlayerStatsModule
 
 	public static void SetEnergy(float value)
 	{
+		if (SaveGameManager.Current == null) return;
 		try
 		{
 			GameManager.Command_SetEnergy(value);
@@ -158,6 +159,7 @@ public static class PlayerStatsModule
 
 	public static void ChangeHappiness(int amount)
 	{
+		if (SaveGameManager.Current == null) return;
 		try
 		{
 			GameManager.Command_ChangeHappiness(amount);
@@ -170,6 +172,7 @@ public static class PlayerStatsModule
 
 	public static void ChangeHunger(int amount)
 	{
+		if (SaveGameManager.Current == null) return;
 		try
 		{
 			GameManager.Command_ChangeHunger(amount);
@@ -182,16 +185,16 @@ public static class PlayerStatsModule
 
 	public static void FillAllNeeds()
 	{
-		try
-		{
-			GameManager.Command_SetEnergy(100f);
-			GameManager.Command_ChangeHappiness(100);
-			GameManager.Command_ChangeHunger(100);
-		}
-		catch (Exception ex)
-		{
-			MelonLogger.Warning("[PlayerStats] Error filling needs: " + ex.Message);
-		}
+		if (SaveGameManager.Current == null) return;
+
+		try { GameManager.Command_SetEnergy(100f); }
+		catch (Exception ex) { MelonLogger.Warning("[PlayerStats] Error filling energy: " + ex.Message); }
+
+		try { GameManager.Command_ChangeHappiness(100); }
+		catch (Exception ex) { MelonLogger.Warning("[PlayerStats] Error filling happiness: " + ex.Message); }
+
+		try { GameManager.Command_ChangeHunger(100); }
+		catch (Exception ex) { MelonLogger.Warning("[PlayerStats] Error filling hunger: " + ex.Message); }
 	}
 
 	public static void ToggleDisableEnergy(bool value)

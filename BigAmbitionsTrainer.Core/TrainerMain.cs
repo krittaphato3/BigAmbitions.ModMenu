@@ -16,7 +16,7 @@ public class TrainerMain : MelonMod
 	public override void OnInitializeMelon()
 	{
 		MelonLogger.Msg("===========================================");
-		MelonLogger.Msg("  ItzRealOzone Trainer v4.0 loaded!");
+		MelonLogger.Msg("  ItzRealOzone Trainer v1.0.1 loaded!");
 		MelonLogger.Msg("  Open your phone to access the ItzRealOzone Trainer app");
 		MelonLogger.Msg("===========================================");
 		TrainerConfig.Initialize();
@@ -88,6 +88,7 @@ public class TrainerMain : MelonMod
 
 	public override void OnApplicationQuit()
 	{
+		TrainerConfig.Save();
 		TrainerOverlay.Cleanup();
 		PhoneButtonInjector.Remove();
 		ConfirmationDialog.Cleanup();

@@ -23,17 +23,7 @@ public static class PhoneButtonInjector
 
 	private static int _searchCooldown;
 
-	private static int _retryCount;
-
 	private static bool _explorationDone;
-
-	private static int _startDelay;
-
-	private const int StartDelayFrames = 180;
-
-	private const int SearchInterval = 90;
-
-	private const int MaxRetries = 50;
 
 	public static bool IsInjected
 	{
@@ -54,9 +44,7 @@ public static class PhoneButtonInjector
 		_fullMenuButton = null;
 		_fullMenuInjected = false;
 		_searchCooldown = 0;
-		_retryCount = 0;
 		_explorationDone = false;
-		_startDelay = StartDelayFrames;
 		_lastPhoneIntegration = TrainerConfig.PhoneIntegration;
 		MelonLogger.Msg("[PhoneIntegration] Initialized.");
 	}
@@ -82,11 +70,6 @@ public static class PhoneButtonInjector
 		{
 			return;
 		}
-		if (_startDelay > 0)
-		{
-			_startDelay--;
-			return;
-		}
 		if (_fullMenuInjected)
 		{
 			try
@@ -103,15 +86,11 @@ public static class PhoneButtonInjector
 				ResetState();
 			}
 		}
-		if (_retryCount < 50)
+		_searchCooldown--;
+		if (_searchCooldown <= 0)
 		{
-			_searchCooldown--;
-			if (_searchCooldown <= 0)
-			{
-				_searchCooldown = 90;
-				_retryCount++;
-				TryInject();
-			}
+			_searchCooldown = 90;
+			TryInject();
 		}
 	}
 
@@ -119,7 +98,6 @@ public static class PhoneButtonInjector
 	{
 		_fullMenuInjected = false;
 		_fullMenuButton = null;
-		_retryCount = 0;
 		_explorationDone = false;
 		TrainerPanel.Destroy();
 	}
@@ -136,10 +114,6 @@ public static class PhoneButtonInjector
 			if (!_fullMenuInjected)
 			{
 				TryInjectFullMenu();
-			}
-			if (_retryCount >= 50 && !_fullMenuInjected)
-			{
-				MelonLogger.Warning("[PhoneIntegration] Max retries reached - phone injection failed. The phone UI may not be available yet.");
 			}
 		}
 		catch (Exception ex)
@@ -379,7 +353,6 @@ public static class PhoneButtonInjector
 		}
 		TrainerPanel.Destroy();
 		_fullMenuInjected = false;
-		_retryCount = 0;
 		_explorationDone = false;
 		MelonLogger.Msg("[PhoneIntegration] Removed.");
 	}
