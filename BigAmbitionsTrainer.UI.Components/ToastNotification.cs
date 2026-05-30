@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using BigAmbitionsTrainer.Config;
 using MelonLoader;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace BigAmbitionsTrainer.UI.Components;
 
@@ -123,6 +124,21 @@ public static class ToastNotification
 		val.SetPixel(0, 0, color);
 		val.Apply();
 		return val;
+	}
+
+	public static void Cleanup()
+	{
+		_toasts.Clear();
+		if (_fillTex != null)
+		{
+			Object.DestroyImmediate(_fillTex);
+			_fillTex = null;
+		}
+		_toastBgStyle = null;
+		_successTextStyle = null;
+		_errorTextStyle = null;
+		_fillStyle = null;
+		_stylesInitialized = false;
 	}
 
 	private static void EnsureStyles()

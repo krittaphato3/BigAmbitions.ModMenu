@@ -397,6 +397,21 @@ public static class TrainerPanel
 		{
 			try
 			{
+				if (_tabButtons != null)
+				{
+					for (int i = 0; i < _tabButtons.Length; i++)
+					{
+						GameObject btn = _tabButtons[i];
+						if ((Object)(object)btn != (Object)null)
+						{
+							Button b = btn.GetComponent<Button>();
+							if ((Object)(object)b != (Object)null)
+							{
+								((UnityEventBase)b.onClick).RemoveAllListeners();
+							}
+						}
+					}
+				}
 				Object.Destroy((Object)(object)_panelRoot);
 			}
 			catch

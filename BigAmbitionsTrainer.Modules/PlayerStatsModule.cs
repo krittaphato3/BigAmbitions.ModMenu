@@ -108,7 +108,7 @@ public static class PlayerStatsModule
 				if ((Object)(object)_cachedPlayer == (Object)null && _playerSearchCooldown <= 0)
 				{
 					_cachedPlayer = Object.FindObjectOfType<ThirdPersonCharacter>();
-					_playerSearchCooldown = 300;
+					_playerSearchCooldown = 60;
 				}
 				if (_playerSearchCooldown > 0)
 				{

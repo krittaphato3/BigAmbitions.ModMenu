@@ -89,5 +89,9 @@ public class TrainerMain : MelonMod
 	public override void OnApplicationQuit()
 	{
 		TrainerOverlay.Cleanup();
+		PhoneButtonInjector.Remove();
+		ConfirmationDialog.Cleanup();
+		TooltipManager.Cleanup();
+		ToastNotification.Cleanup();
 	}
 }

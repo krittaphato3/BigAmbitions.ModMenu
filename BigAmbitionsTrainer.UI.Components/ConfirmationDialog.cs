@@ -1,6 +1,7 @@
 using System;
 using MelonLoader;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace BigAmbitionsTrainer.UI.Components;
 
@@ -75,6 +76,35 @@ public static class ConfirmationDialog
 		_message = null;
 		_onConfirm = null;
 		_onCancel = null;
+	}
+
+	public static void Cleanup()
+	{
+		_active = false;
+		_title = null;
+		_message = null;
+		_onConfirm = null;
+		_onCancel = null;
+		if (_overlayStyle?.normal.background != null)
+		{
+			Object.DestroyImmediate(_overlayStyle.normal.background);
+		}
+		if (_bgStyle?.normal.background != null)
+		{
+			Object.DestroyImmediate(_bgStyle.normal.background);
+		}
+		if (_btnConfirmStyle?.normal.background != null)
+		{
+			Object.DestroyImmediate(_btnConfirmStyle.normal.background);
+		}
+		if (_btnCancelStyle?.normal.background != null)
+		{
+			Object.DestroyImmediate(_btnCancelStyle.normal.background);
+		}
+		_overlayStyle = null;
+		_bgStyle = null;
+		_btnConfirmStyle = null;
+		_btnCancelStyle = null;
 	}
 
 	private static GUIStyle _overlayStyle;

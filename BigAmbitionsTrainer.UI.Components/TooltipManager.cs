@@ -1,4 +1,5 @@
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace BigAmbitionsTrainer.UI.Components;
 
@@ -16,6 +17,17 @@ public static class TooltipManager
 	public static void Hide()
 	{
 		_activeTooltip = null;
+	}
+
+	public static void Cleanup()
+	{
+		_activeTooltip = null;
+		if (_tooltipBg != null)
+		{
+			Object.DestroyImmediate(_tooltipBg);
+			_tooltipBg = null;
+		}
+		_tooltipStyle = null;
 	}
 
 	public static void OnGUI()
